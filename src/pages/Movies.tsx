@@ -8,6 +8,8 @@ import { MovieService } from '../services/MovieService';
 
 const movieService = new MovieService();
 
+const safeId = (m: any) => String(m.id ?? m._id ?? m.movieId ?? `${m.title}-${m.year}`);
+
 const Movies = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -52,14 +54,14 @@ const Movies = () => {
           maxWidth: '400px',
           marginBottom: '20px',
           borderRadius: '5px',
-          border: '1px solid ' + '#ccc'
+          border: '1px solid #ccc'
         }}
       />
 
       <div style={{ display: 'grid', gap: '12px', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
         {paged.length > 0 ? (
           paged.map((movie) => {
-            const id = getId(movie as any);
+            const id = safeId(movie);
             const inWL = idsInWatchlist.has(id);
             return (
               <div key={id} style={{ display: 'grid', gap: 8 }}>
@@ -72,7 +74,7 @@ const Movies = () => {
                 <button
                   onClick={() => add({ ...movie, movieId: id })}
                   disabled={inWL}
-                  style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid ' + '#ccc' }}
+                  style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #ccc' }}
                 >
                   {inWL ? 'U watchlist-i' : 'Dodaj u watchlist'}
                 </button>
