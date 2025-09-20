@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import MovieCard from '../components/MovieCard';
+import Pagination from '../components/Pagination';
 import { Movie } from '../models/Movie';
 import { MovieService } from '../services/MovieService';
 
@@ -8,20 +9,28 @@ const movieService = new MovieService();
 const Movies = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [page, setPage] = useState(1);
+  const pageSize = 8;
 
-useEffect(() => {
-  const allMovies = movieService.getAll();
-  setMovies(allMovies);
-}, []);
+  useEffect(() => {
+    const allMovies = movieService.getAll();
+    setMovies(allMovies);
+  }, []);
 
-
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    const filtered = movieService.search(value);
+    const filtered = value ? movieService.search(value) : movieService.getAll();
     setMovies(filtered);
   };
+
+  const total = movies.length;
+  const start = (page - 1) * pageSize;
+  const paged = movies.slice(start, start + pageSize);
 
   return (
     <div style={{ padding: '20px' }}>
@@ -42,9 +51,9 @@ useEffect(() => {
         }}
       />
 
-      <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-        {movies.length > 0 ? (
-          movies.map((movie, index) => (
+      <div style={{ display: 'grid', gap: '12px', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+        {paged.length > 0 ? (
+          paged.map((movie, index) => (
             <MovieCard
               key={index}
               title={movie.title}
@@ -56,6 +65,15 @@ useEffect(() => {
         ) : (
           <p>Nema filmova koji odgovaraju pretrazi.</p>
         )}
+      </div>
+
+      <div style={{ marginTop: '16px' }}>
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );
