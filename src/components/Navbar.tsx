@@ -27,7 +27,7 @@ const Navbar = () => {
       marginBottom: '20px',
       backgroundColor: '#f8f9fa',
     }}>
-      {/* Logo levo */}
+    
       <NavLink to="/" style={{
         textDecoration: 'none',
         fontSize: '24px',
@@ -51,6 +51,9 @@ const Navbar = () => {
         </NavLink>
         <NavLink to="/login" style={({ isActive }) => isActive ? activeStyle : linkStyle}>
           Prijava
+          </NavLink>
+<NavLink to="/watchlist" style={({ isActive }) => isActive ? activeStyle : linkStyle}>
+          Watchlist
         </NavLink>
       </div>
     </nav>

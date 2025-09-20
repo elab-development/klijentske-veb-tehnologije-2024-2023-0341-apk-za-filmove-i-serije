@@ -12,7 +12,7 @@ const Login = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Privremena "provera" podataka
+  
     if (email === 'admin' && password === 'admin') {
       alert('Uspešno prijavljivanje!');
       navigate('/');
