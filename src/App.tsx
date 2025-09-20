@@ -6,13 +6,16 @@ import Series from './pages/Series';
 import Navbar from './components/Navbar'; 
 import Watchlist from './pages/Watchlist';
 import { WatchlistProvider } from './context/WatchlistContext';
+import { AuthProvider } from './context/AuthContext';
 <Route path="/watchlist" element={<Watchlist />} />
-
 
 function App() {
   return (
+
+  <Router>
     <WatchlistProvider>
-    <Router>
+      <AuthProvider>
+    
       <Navbar /> 
       <Routes>
         <Route path="/watchlist" element={<Watchlist />} />
@@ -21,8 +24,10 @@ function App() {
         <Route path="/movies" element={<Movies />} />
         <Route path="/series" element={<Series />} />
       </Routes>
-    </Router>
+      </AuthProvider>
     </WatchlistProvider>
+    </Router>
+    
   );
 }
 
