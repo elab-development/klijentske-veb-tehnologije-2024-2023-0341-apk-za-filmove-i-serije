@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import MovieCard from '../components/MovieCard';
 import Pagination from '../components/Pagination';
+import { useWatchlist } from '../context/WatchlistContext';
+import { getId } from '../utils/getId';
+
+const safeId = (m: any) => String(m.id ?? m._id ?? m.movieId ?? `${m.title}-${m.year}`);
 
 const Series = () => {
   const allSeries = [
@@ -14,6 +18,9 @@ const Series = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const pageSize = 8;
+
+  const { items, add } = useWatchlist();
+  const idsInWatchlist = useMemo(() => new Set(items.map(getId)), [items]);
 
   useEffect(() => {
     setPage(1);
@@ -45,15 +52,27 @@ const Series = () => {
 
       <div style={{ display: 'grid', gap: '12px', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
         {paged.length > 0 ? (
-          paged.map((series, index) => (
-            <MovieCard
-              key={index}
-              title={series.title}
-              year={series.year}
-              rating={series.rating}
-              posterUrl={series.posterUrl}
-            />
-          ))
+          paged.map((series) => {
+            const id = safeId(series);
+            const inWL = idsInWatchlist.has(id);
+            return (
+              <div key={id} style={{ display: 'grid', gap: 8 }}>
+                <MovieCard
+                  title={series.title}
+                  year={series.year}
+                  rating={series.rating}
+                  posterUrl={series.posterUrl}
+                />
+                <button
+                  onClick={() => add({ ...series, movieId: id })}
+                  disabled={inWL}
+                  style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #ccc' }}
+                >
+                  {inWL ? 'U watchlist-i' : 'Dodaj u watchlist'}
+                </button>
+              </div>
+            );
+          })
         ) : (
           <p>Nema serija koje odgovaraju pretrazi.</p>
         )}
@@ -72,4 +91,3 @@ const Series = () => {
 };
 
 export default Series;
-
