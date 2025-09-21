@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import MovieCard from '../components/MovieCard';
 import Pagination from '../components/Pagination';
 import { useWatchlist } from '../context/WatchlistContext';
@@ -10,6 +11,9 @@ const movieService = new MovieService();
 const safeId = (m: any) => String(m.id ?? m._id ?? m.movieId ?? `${m.title}-${m.year}`);
 
 const Movies = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [year, setYear] = useState<string>('');
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
@@ -25,8 +29,27 @@ const Movies = () => {
   }, []);
 
   useEffect(() => {
-    setPage(1);
-  }, [searchTerm, year]);
+    const params = new URLSearchParams(location.search);
+    const q = params.get('q') ?? '';
+    const y = params.get('y') ?? '';
+    const p = parseInt(params.get('p') ?? '1', 10);
+    setSearchTerm(q);
+    setYear(y);
+    setPage(Number.isFinite(p) && p > 0 ? p : 1);
+  }, [location.search]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchTerm.trim()) params.set('q', searchTerm.trim());
+    if (year.trim()) params.set('y', year.trim());
+    if (page > 1) params.set('p', String(page));
+    const qs = params.toString();
+    const next = qs ? `?${qs}` : '';
+    const current = location.search;
+    if (current !== next) {
+      navigate({ pathname: '/movies', search: next }, { replace: true });
+    }
+  }, [searchTerm, year, page, navigate, location.search]);
 
   const filtered = useMemo(() => {
     const y = year.trim();
@@ -40,6 +63,10 @@ const Movies = () => {
   const total = filtered.length;
   const start = (page - 1) * pageSize;
   const paged = filtered.slice(start, start + pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, year, allMovies]);
 
   return (
     <div style={{ padding: '20px' }}>
