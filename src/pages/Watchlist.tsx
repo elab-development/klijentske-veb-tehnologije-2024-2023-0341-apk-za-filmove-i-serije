@@ -1,9 +1,20 @@
 import React from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useWatchlist } from '../context/WatchlistContext';
 import { getId } from '../utils/getId';
 
 export default function Watchlist() {
+  const { user } = useAuth();
   const { items, remove, toggleWatched, rate, clear } = useWatchlist();
+
+  if (!user) {
+    return (
+      <div style={{ padding: 16 }}>
+        <h2>Watchlist</h2>
+        <p>Morate biti prijavljeni da biste videli watchlist.</p>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -19,11 +30,7 @@ export default function Watchlist() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <h2 style={{ margin: 0 }}>Watchlist</h2>
         <span style={{ opacity: 0.8 }}>({items.length})</span>
-        <button
-          style={{ marginLeft: 'auto' }}
-          onClick={clear}
-          title="Ukloni sve iz liste"
-        >
+        <button style={{ marginLeft: 'auto' }} onClick={clear} title="Ukloni sve iz liste">
           Clear all
         </button>
       </div>
@@ -49,27 +56,13 @@ export default function Watchlist() {
               </div>
 
               <div style={{ opacity: 0.9 }}>
-                Watched: <b>{m.watched ? 'Yes' : 'No'}</b> | Rating:{' '}
-                <b>{m.rating ?? '-'}</b>
+                Watched: <b>{m.watched ? 'Yes' : 'No'}</b> | Rating: <b>{m.rating ?? '-'}</b>
               </div>
 
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button onClick={() => toggleWatched(id)}>
-                  {m.watched ? 'Unwatch' : 'Mark watched'}
-                </button>
-                <button onClick={() => rate(id, (m.rating ?? 0) + 1)}>
-                  Rate +
-                </button>
-                <button
-                  onClick={() =>
-                    rate(
-                      id,
-                      (m.rating ?? 0) - 1 <= 0 ? 1 : (m.rating ?? 0) - 1
-                    )
-                  }
-                >
-                  Rate –
-                </button>
+                <button onClick={() => toggleWatched(id)}>{m.watched ? 'Unwatch' : 'Mark watched'}</button>
+                <button onClick={() => rate(id, (m.rating ?? 0) + 1)}>Rate +</button>
+                <button onClick={() => rate(id, (m.rating ?? 0) - 1 <= 0 ? 1 : (m.rating ?? 0) - 1)}>Rate –</button>
                 <button onClick={() => remove(id)}>Remove</button>
               </div>
             </li>
