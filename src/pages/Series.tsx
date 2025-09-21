@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import MovieCard from '../components/MovieCard';
 import Pagination from '../components/Pagination';
 import { useWatchlist } from '../context/WatchlistContext';
@@ -7,6 +8,9 @@ import { getId } from '../utils/getId';
 const safeId = (m: any) => String(m.id ?? m._id ?? m.movieId ?? `${m.title}-${m.year}`);
 
 const Series = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const allSeries = [
     { title: 'Breaking Bad', year: 2008, rating: 9.5, posterUrl: 'https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg' },
     { title: 'Stranger Things', year: 2016, rating: 8.7, posterUrl: 'https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg' },
@@ -24,8 +28,26 @@ const Series = () => {
   const idsInWatchlist = useMemo(() => new Set(items.map(getId)), [items]);
 
   useEffect(() => {
-    setPage(1);
-  }, [searchTerm, year]);
+    const params = new URLSearchParams(location.search);
+    const q = params.get('q') ?? '';
+    const y = params.get('y') ?? '';
+    const p = parseInt(params.get('p') ?? '1', 10);
+    setSearchTerm(q);
+    setYear(y);
+    setPage(Number.isFinite(p) && p > 0 ? p : 1);
+  }, [location.search]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchTerm.trim()) params.set('q', searchTerm.trim());
+    if (year.trim()) params.set('y', year.trim());
+    if (page > 1) params.set('p', String(page));
+    const qs = params.toString();
+    const next = qs ? `?${qs}` : '';
+    if (location.search !== next) {
+      navigate({ pathname: '/series', search: next }, { replace: true });
+    }
+  }, [searchTerm, year, page, navigate, location.search]);
 
   const filtered = useMemo(() => {
     const y = year.trim();
@@ -39,6 +61,10 @@ const Series = () => {
   const total = filtered.length;
   const start = (page - 1) * pageSize;
   const paged = filtered.slice(start, start + pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, year]);
 
   return (
     <div style={{ padding: '20px' }}>
