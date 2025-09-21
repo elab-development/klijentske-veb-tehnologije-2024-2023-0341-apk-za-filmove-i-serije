@@ -16,6 +16,7 @@ const Series = () => {
   ];
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [year, setYear] = useState<string>('');
   const [page, setPage] = useState(1);
   const pageSize = 8;
 
@@ -24,9 +25,17 @@ const Series = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, year]);
 
-  const filtered = allSeries.filter(s => s.title.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filtered = useMemo(() => {
+    const y = year.trim();
+    return allSeries.filter(s => {
+      const okText = s.title.toLowerCase().includes(searchTerm.toLowerCase());
+      const okYear = y === '' ? true : String(s.year) === y;
+      return okText && okYear;
+    });
+  }, [allSeries, searchTerm, year]);
+
   const total = filtered.length;
   const start = (page - 1) * pageSize;
   const paged = filtered.slice(start, start + pageSize);
@@ -35,20 +44,22 @@ const Series = () => {
     <div style={{ padding: '20px' }}>
       <h2>Serije</h2>
 
-      <input
-        type="text"
-        placeholder="Pretraži serije..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        style={{
-          padding: '10px',
-          width: '100%',
-          maxWidth: '400px',
-          marginBottom: '20px',
-          borderRadius: '5px',
-          border: '1px solid #ccc'
-        }}
-      />
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        <input
+          type="text"
+          placeholder="Pretraži serije..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ padding: '10px', width: '260px', borderRadius: '5px', border: '1px solid #ccc' }}
+        />
+        <input
+          type="number"
+          placeholder="Godina"
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+          style={{ padding: '10px', width: '120px', borderRadius: '5px', border: '1px solid #ccc' }}
+        />
+      </div>
 
       <div style={{ display: 'grid', gap: '12px', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
         {paged.length > 0 ? (
@@ -74,7 +85,7 @@ const Series = () => {
             );
           })
         ) : (
-          <p>Nema serija koje odgovaraju pretrazi.</p>
+          <p>Nema serija koje odgovaraju filterima.</p>
         )}
       </div>
 
