@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import MovieCard from '../components/MovieCard';
 import Pagination from '../components/Pagination';
 import { useWatchlist } from '../context/WatchlistContext';
@@ -7,12 +7,12 @@ import { Movie } from '../models/Movie';
 import { MovieService } from '../services/MovieService';
 
 const movieService = new MovieService();
-
 const safeId = (m: any) => String(m.id ?? m._id ?? m.movieId ?? `${m.title}-${m.year}`);
 
 const Movies = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [movies, setMovies] = useState<Movie[]>([]);
+  const [year, setYear] = useState<string>('');
+  const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [page, setPage] = useState(1);
   const pageSize = 8;
 
@@ -20,43 +20,47 @@ const Movies = () => {
   const idsInWatchlist = useMemo(() => new Set(items.map(getId)), [items]);
 
   useEffect(() => {
-    const allMovies = movieService.getAll();
-    setMovies(allMovies);
+    const list = movieService.getAll();
+    setAllMovies(list);
   }, []);
 
   useEffect(() => {
     setPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, year]);
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    const filtered = value ? movieService.search(value) : movieService.getAll();
-    setMovies(filtered);
-  };
+  const filtered = useMemo(() => {
+    const y = year.trim();
+    return allMovies.filter(m => {
+      const okText = m.title.toLowerCase().includes(searchTerm.toLowerCase());
+      const okYear = y === '' ? true : String(m.year) === y;
+      return okText && okYear;
+    });
+  }, [allMovies, searchTerm, year]);
 
-  const total = movies.length;
+  const total = filtered.length;
   const start = (page - 1) * pageSize;
-  const paged = movies.slice(start, start + pageSize);
+  const paged = filtered.slice(start, start + pageSize);
 
   return (
     <div style={{ padding: '20px' }}>
       <h2>Filmovi</h2>
 
-      <input
-        type="text"
-        placeholder="Pretraži filmove..."
-        value={searchTerm}
-        onChange={handleSearch}
-        style={{
-          padding: '10px',
-          width: '100%',
-          maxWidth: '400px',
-          marginBottom: '20px',
-          borderRadius: '5px',
-          border: '1px solid #ccc'
-        }}
-      />
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        <input
+          type="text"
+          placeholder="Pretraži filmove..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ padding: '10px', width: '260px', borderRadius: '5px', border: '1px solid #ccc' }}
+        />
+        <input
+          type="number"
+          placeholder="Godina"
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+          style={{ padding: '10px', width: '120px', borderRadius: '5px', border: '1px solid #ccc' }}
+        />
+      </div>
 
       <div style={{ display: 'grid', gap: '12px', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
         {paged.length > 0 ? (
@@ -82,7 +86,7 @@ const Movies = () => {
             );
           })
         ) : (
-          <p>Nema filmova koji odgovaraju pretrazi.</p>
+          <p>Nema filmova koji odgovaraju filterima.</p>
         )}
       </div>
 
