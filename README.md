@@ -16,7 +16,7 @@ Build za produkciju:
 - npm run build
 - npm run preview
 
-Aplikacija se pokreće na adresi koju prikaže terminal (npr. http://localhost:5173 ili http://localhost:3000).
+Aplikacija se pokreće na adresi koju prikaže terminal (http://localhost:3000).
 
 ---
 
