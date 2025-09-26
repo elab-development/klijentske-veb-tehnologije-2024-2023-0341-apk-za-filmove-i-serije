@@ -16,6 +16,7 @@ const Movies = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [year, setYear] = useState<string>('');
+  const [genre, setGenre] = useState<string>('');
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [page, setPage] = useState(1);
   const pageSize = 8;
@@ -32,9 +33,11 @@ const Movies = () => {
     const params = new URLSearchParams(location.search);
     const q = params.get('q') ?? '';
     const y = params.get('y') ?? '';
+    const g = params.get('g') ?? '';
     const p = parseInt(params.get('p') ?? '1', 10);
     setSearchTerm(q);
     setYear(y);
+    setGenre(g);
     setPage(Number.isFinite(p) && p > 0 ? p : 1);
   }, [location.search]);
 
@@ -42,23 +45,41 @@ const Movies = () => {
     const params = new URLSearchParams();
     if (searchTerm.trim()) params.set('q', searchTerm.trim());
     if (year.trim()) params.set('y', year.trim());
+    if (genre.trim()) params.set('g', genre.trim());
     if (page > 1) params.set('p', String(page));
     const qs = params.toString();
     const next = qs ? `?${qs}` : '';
-    const current = location.search;
-    if (current !== next) {
+    if (location.search !== next) {
       navigate({ pathname: '/movies', search: next }, { replace: true });
     }
-  }, [searchTerm, year, page, navigate, location.search]);
+  }, [searchTerm, year, genre, page, navigate, location.search]);
+
+  const genres = useMemo(() => {
+    const set = new Set<string>();
+    allMovies.forEach((m) => {
+      const arr =
+        (m as any).genres ??
+        ((m as any).genre ? [(m as any).genre as string] : ['Ostalo']);
+      arr.forEach((g: string) => set.add(g));
+    });
+    return Array.from(set);
+  }, [allMovies]);
 
   const filtered = useMemo(() => {
     const y = year.trim();
-    return allMovies.filter(m => {
+    const g = genre.trim();
+    return allMovies.filter((m) => {
       const okText = m.title.toLowerCase().includes(searchTerm.toLowerCase());
       const okYear = y === '' ? true : String(m.year) === y;
-      return okText && okYear;
+
+      const arr =
+        (m as any).genres ??
+        ((m as any).genre ? [(m as any).genre as string] : ['Ostalo']);
+      const okGenre = g === '' ? true : arr.includes(g);
+
+      return okText && okYear && okGenre;
     });
-  }, [allMovies, searchTerm, year]);
+  }, [allMovies, searchTerm, year, genre]);
 
   const total = filtered.length;
   const start = (page - 1) * pageSize;
@@ -66,7 +87,7 @@ const Movies = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, year, allMovies]);
+  }, [searchTerm, year, genre, allMovies]);
 
   return (
     <div style={{ padding: '20px' }}>
@@ -87,6 +108,20 @@ const Movies = () => {
           onChange={(e) => setYear(e.target.value)}
           style={{ padding: '10px', width: '120px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
+        <select
+          value={genre}
+          onChange={(e) => setGenre(e.target.value)}
+          style={{ padding: '10px', minWidth: 160, borderRadius: 5, border: '1px solid #ccc' }}
+        >
+          <option value="" disabled>
+            Izaberi žanr
+          </option>
+          {genres.map((g) => (
+            <option key={g} value={g}>
+              {g}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div style={{ display: 'grid', gap: '12px', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
@@ -118,12 +153,7 @@ const Movies = () => {
       </div>
 
       <div style={{ marginTop: '16px' }}>
-        <Pagination
-          page={page}
-          pageSize={pageSize}
-          total={total}
-          onPageChange={setPage}
-        />
+        <Pagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} />
       </div>
     </div>
   );

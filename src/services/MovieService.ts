@@ -29,7 +29,7 @@ export class MovieService implements IMovieService {
       year: 1995,
       rating: 8.5,
       posterUrl: 'https://image.tmdb.org/t/p/w500/bUPmtQzrRhzqYySeiMpv7GurAfm.jpg',
-      genre: 'Mystery' 'Action'
+      genres: ['Action', 'Mystery']
     },
     {
       title: 'The Godfather',
@@ -43,7 +43,7 @@ export class MovieService implements IMovieService {
       year: 1999,
       rating: 8.8,
       posterUrl: 'https://image.tmdb.org/t/p/w500/bptfVGEQuv6vDTIMVCHjJ9Dz8PX.jpg',
-      genre: 'Action' 'Mystery'
+      genres: ['Action', 'Mystery']
     },
   ];
 

@@ -4,4 +4,5 @@ export interface Movie {
   rating: number;
   posterUrl: string;
   genre?: string;
+  genres?: string[];
 }
