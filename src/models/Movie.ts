@@ -3,5 +3,5 @@ export interface Movie {
   year: number;
   rating: number;
   posterUrl: string;
-  
+  genre?: string;
 }
