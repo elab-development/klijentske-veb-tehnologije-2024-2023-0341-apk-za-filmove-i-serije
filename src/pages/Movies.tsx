@@ -7,6 +7,8 @@ import { getId } from '../utils/getId';
 import { Movie } from '../models/Movie';
 import { MovieService } from '../services/MovieService';
 
+type SortOption = '' | 'az' | 'za' | 'yearAsc' | 'yearDesc' | 'ratingAsc' | 'ratingDesc';
+
 const movieService = new MovieService();
 const safeId = (m: any) => String(m.id ?? m._id ?? m.movieId ?? `${m.title}-${m.year}`);
 
@@ -17,6 +19,7 @@ const Movies = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [year, setYear] = useState<string>('');
   const [genre, setGenre] = useState<string>('');
+  const [sort, setSort] = useState<SortOption>('');
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [page, setPage] = useState(1);
   const pageSize = 8;
@@ -34,10 +37,12 @@ const Movies = () => {
     const q = params.get('q') ?? '';
     const y = params.get('y') ?? '';
     const g = params.get('g') ?? '';
+    const s = (params.get('s') ?? '') as SortOption;
     const p = parseInt(params.get('p') ?? '1', 10);
     setSearchTerm(q);
     setYear(y);
     setGenre(g);
+    setSort(s);
     setPage(Number.isFinite(p) && p > 0 ? p : 1);
   }, [location.search]);
 
@@ -46,18 +51,19 @@ const Movies = () => {
     if (searchTerm.trim()) params.set('q', searchTerm.trim());
     if (year.trim()) params.set('y', year.trim());
     if (genre.trim()) params.set('g', genre.trim());
+    if (sort) params.set('s', sort);
     if (page > 1) params.set('p', String(page));
     const qs = params.toString();
     const next = qs ? `?${qs}` : '';
     if (location.search !== next) {
       navigate({ pathname: '/movies', search: next }, { replace: true });
     }
-  }, [searchTerm, year, genre, page, navigate, location.search]);
+  }, [searchTerm, year, genre, sort, page, navigate, location.search]);
 
   const genres = useMemo(() => {
     const set = new Set<string>();
     allMovies.forEach((m) => {
-      const arr =
+      const arr: string[] =
         (m as any).genres ??
         ((m as any).genre ? [(m as any).genre as string] : ['Ostalo']);
       arr.forEach((g: string) => set.add(g));
@@ -71,23 +77,48 @@ const Movies = () => {
     return allMovies.filter((m) => {
       const okText = m.title.toLowerCase().includes(searchTerm.toLowerCase());
       const okYear = y === '' ? true : String(m.year) === y;
-
-      const arr =
+      const arr: string[] =
         (m as any).genres ??
         ((m as any).genre ? [(m as any).genre as string] : ['Ostalo']);
       const okGenre = g === '' ? true : arr.includes(g);
-
       return okText && okYear && okGenre;
     });
   }, [allMovies, searchTerm, year, genre]);
 
-  const total = filtered.length;
+  const sorted = useMemo(() => {
+    const a = [...filtered];
+    switch (sort) {
+      case 'az':
+        a.sort((x, y) => x.title.localeCompare(y.title));
+        break;
+      case 'za':
+        a.sort((x, y) => y.title.localeCompare(x.title));
+        break;
+      case 'yearAsc':
+        a.sort((x, y) => x.year - y.year);
+        break;
+      case 'yearDesc':
+        a.sort((x, y) => y.year - x.year);
+        break;
+      case 'ratingAsc':
+        a.sort((x, y) => (x.rating ?? 0) - (y.rating ?? 0));
+        break;
+      case 'ratingDesc':
+        a.sort((x, y) => (y.rating ?? 0) - (x.rating ?? 0));
+        break;
+      default:
+        break;
+    }
+    return a;
+  }, [filtered, sort]);
+
+  const total = sorted.length;
   const start = (page - 1) * pageSize;
-  const paged = filtered.slice(start, start + pageSize);
+  const paged = sorted.slice(start, start + pageSize);
 
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, year, genre, allMovies]);
+  }, [searchTerm, year, genre, sort, allMovies]);
 
   return (
     <div style={{ padding: '20px' }}>
@@ -99,7 +130,7 @@ const Movies = () => {
           placeholder="Pretraži filmove..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ padding: '10px', width: '260px', borderRadius: '5px', border: '1px solid #ccc' }}
+          style={{ padding: '10px', width: '220px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
         <input
           type="number"
@@ -122,6 +153,20 @@ const Movies = () => {
             </option>
           ))}
         </select>
+
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as SortOption)}
+          style={{ padding: '10px', minWidth: 200, borderRadius: 5, border: '1px solid #ccc' }}
+        >
+          <option value="">Sortiraj</option>
+          <option value="az">Naslov: A → Z</option>
+          <option value="za">Naslov: Z → A</option>
+          <option value="yearAsc">Godina: najstarije prvo</option>
+          <option value="yearDesc">Godina: najnovije prvo</option>
+          <option value="ratingDesc">Ocena: najviša prvo</option>
+          <option value="ratingAsc">Ocena: najniža prvo</option>
+        </select>
       </div>
 
       <div style={{ display: 'grid', gap: '12px', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
@@ -131,12 +176,7 @@ const Movies = () => {
             const inWL = idsInWatchlist.has(id);
             return (
               <div key={id} style={{ display: 'grid', gap: 8 }}>
-                <MovieCard
-                  title={movie.title}
-                  year={movie.year}
-                  rating={movie.rating}
-                  posterUrl={movie.posterUrl}
-                />
+                <MovieCard title={movie.title} year={movie.year} rating={movie.rating} posterUrl={movie.posterUrl} />
                 <button
                   onClick={() => add({ ...movie, movieId: id })}
                   disabled={inWL}
