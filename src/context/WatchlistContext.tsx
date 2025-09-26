@@ -55,15 +55,16 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const rate = (id: AnyId, r: number) => {
-    const idStr = String(id);
-    const safe = Math.min(5, Math.max(1, Math.round(r)));
-    setItems(prev =>
-      prev.map(x =>
-        getId(x) === idStr ? { ...x, rating: safe } : x
-      )
-    );
-  };
+const rate = (id: string | number, r: number) => {
+  const idStr = String(id);
+  const safe = Math.max(1, Math.min(10, Math.round(r * 10) / 10));
+  setItems(prev =>
+    prev.map(x =>
+      getId(x) === idStr ? { ...x, rating: safe } : x
+    )
+  );
+};
+
 
   const clear = () => setItems([]);
 

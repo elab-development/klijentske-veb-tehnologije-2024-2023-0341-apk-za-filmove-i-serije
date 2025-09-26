@@ -56,13 +56,14 @@ export default function Watchlist() {
               </div>
 
               <div style={{ opacity: 0.9 }}>
-                Watched: <b>{m.watched ? 'Yes' : 'No'}</b> | Rating: <b>{m.rating ?? '-'}</b>
+                Watched: <b>{m.watched ? 'Yes' : 'No'}</b> | Rating:{' '}
+                <b>{typeof m.rating === 'number' ? m.rating.toFixed(1) : '-'}</b>
               </div>
 
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <button onClick={() => toggleWatched(id)}>{m.watched ? 'Unwatch' : 'Mark watched'}</button>
-                <button onClick={() => rate(id, (m.rating ?? 0) + 1)}>Rate +</button>
-                <button onClick={() => rate(id, (m.rating ?? 0) - 1 <= 0 ? 1 : (m.rating ?? 0) - 1)}>Rate –</button>
+                <button onClick={() => rate(id, Math.min(10, ((m.rating ?? 1) + 0.1)))}>Rate +</button>
+                <button onClick={() => rate(id, Math.max(1, ((m.rating ?? 1) - 0.1)))}>Rate –</button>
                 <button onClick={() => remove(id)}>Remove</button>
               </div>
             </li>
