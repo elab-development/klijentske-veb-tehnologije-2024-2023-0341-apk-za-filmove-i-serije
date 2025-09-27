@@ -15,7 +15,7 @@ const Input: React.FC<InputProps> = ({ label, type, value, onChange }) => {
         type={type}
         value={value}
         onChange={onChange}
-        style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+        style={{ width: '95%', padding: '8px', marginTop: '5px' }}
         required
       />
     </div>
