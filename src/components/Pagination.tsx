@@ -22,6 +22,7 @@ export default function Pagination({ page, pageSize, total, onPageChange }: Prop
       <span>{page} / {totalPages}</span>
       <button onClick={() => go(page + 1)} disabled={page >= totalPages} aria-label="Next page">{'>'}</button>
       <button onClick={() => go(totalPages)} disabled={page >= totalPages} aria-label="Last page">{'>>'}</button>
-    </div>
+    </div> 
+    
   );
 }
